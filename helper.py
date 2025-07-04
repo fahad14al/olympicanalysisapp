@@ -56,7 +56,7 @@ def fetch_medal_tally(df, year, country):
     return x
 
 
-def data_over_time(df,col):
+def data_over_time(df, col):
     nations_over_time = df.drop_duplicates(['Year', col])['Year'] \
         .value_counts() \
         .reset_index(name='count') \
@@ -66,3 +66,54 @@ def data_over_time(df,col):
     nations_over_time.rename(columns={'Year': 'Edition', 'count': col}, inplace=True)
 
     return nations_over_time
+
+
+def most_successful(df, sport):
+    temp_df = df.dropna(subset=["Medal"])
+
+    if sport != 'Overall':
+        temp_df = temp_df[temp_df['Sport'] == sport]
+
+    # Step 1: Count top medal winners
+    top_athletes = temp_df["Name"].value_counts().reset_index()
+    top_athletes.columns = ['Name', 'Medal_Count']  # rename columns properly
+
+    # Step 2: Merge with original df to get sport & region
+    merged = top_athletes.merge(df, on='Name', how='left')[['Name', 'Medal_Count', 'Sport', 'region']].drop_duplicates(
+        'Name')
+
+    return merged.head(15)
+
+
+def yearwise_medal_tally(df, country):
+    temp_df = df.dropna(subset=['Medal'])
+    temp_df.drop_duplicates(subset=['Team', 'Games', 'NOC', 'City', 'Sport', 'Event', 'Medal'], inplace=True)
+    new_df = temp_df[temp_df['region'] == "country"]
+    final_df = new_df.groupby('Year').count()['Medal'].reset_index()
+
+    return final_df
+
+
+def country_event_heatmap(df, country):
+    temp_df = df.dropna(subset=['Medal'])
+    temp_df.drop_duplicates(subset=['Team', 'Games', 'NOC', 'City', 'Sport', 'Event', 'Medal'], inplace=True)
+
+    new_df = temp_df[temp_df['region'] == country]
+
+    pt = new_df.pivot_table(index='Sport', columns='Year', values='Medal', aggfunc='count').fillna(0)
+    return pt
+
+
+def most_successful_countrywise(df, country):
+    temp_df = df.dropna(subset=["Medal"])
+
+    temp_df = temp_df[temp_df['region'] == country]
+
+    # Step 1: Count top medal winners
+    top_athletes = temp_df["Name"].value_counts().reset_index()
+    top_athletes.columns = ['Name', 'Medal_Count']  # rename columns properly
+
+    # Step 2: Merge with original df to get sport & region
+    merged = top_athletes.merge(df, on='Name', how='left')[['Name', 'Medal_Count', 'Sport', ]].drop_duplicates('Name')
+
+    return merged.head(15)

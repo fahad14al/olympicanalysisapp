@@ -17,6 +17,7 @@ def preprocess():
 
     # Remove duplicates
     df.drop_duplicates(inplace=True)
+    #jfdakfj
 
     # One-hot encode Medal columns (Gold, Silver, Bronze)
     df = pd.concat([df, pd.get_dummies(df['Medal'])], axis=1)
