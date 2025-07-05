@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import seaborn as sns
 import matplotlib.pyplot as plt
+import plotly.figure_factory as ff
 
 st.set_page_config(page_title="Olympic Analysis App", layout="wide")
 
@@ -135,6 +136,44 @@ if user_menu == 'Country-wise Analysis':
     ax = sns.heatmap(pt, annot=True, ax=ax)
     st.pyplot(fig)
 
-    st.title( 'Top 15 Athletes of selected country ' + selected_country )
-    top15_df = helper.most_successful_countrywise(df,selected_country)
+    st.title('Top 15 Athletes of selected country ' + selected_country)
+    top15_df = helper.most_successful_countrywise(df, selected_country)
     st.table(top15_df)
+
+if user_menu == 'Athlete Wise Analysis':
+    athlete_df = df.drop_duplicates(['Name', 'region'])
+    x1 = athlete_df['Age'].dropna()
+    x2 = athlete_df[athlete_df['Medal'] == 'Gold']['Age'].dropna()
+    x3 = athlete_df[athlete_df['Medal'] == 'Silver']['Age'].dropna()
+    x4 = athlete_df[athlete_df['Medal'] == 'Bronze']['Age'].dropna()
+
+    fig = ff.create_distplot(
+        [x1, x2, x3, x4],
+        group_labels=['All Athletes', 'Gold Medalists', 'Silver Medalists', 'Bronze Medalists'],
+        show_hist=False,
+        show_rug=False
+    )
+    fig.update_layout(autosize=False, width=1000, height=600)
+    st.title('Distribution of Age')
+    st.plotly_chart(fig)
+
+    sport_list = df['Sport'].dropna().unique().tolist()
+    sport_list.sort()
+    sport_list.insert(0, 'Overall')
+
+    st.title('Height vs weight')
+    selected_sports = st.selectbox('Select Sport', sport_list, key='sport_selectbox_vsh')
+
+    # Filtered data
+    temp_df = helper.weight_v_height(df, selected_sports)
+
+    # Scatter plot
+    fig, ax = plt.subplots()
+    sns.scatterplot(x=temp_df['Weight'], y=temp_df['Height'], hue=temp_df['Medal'], style=temp_df['Sex'],  ax=ax)
+    st.pyplot(fig)
+
+    st.title("Men Vs Women Participation Over the Years")
+    final = helper.men_vs_women(df)
+    fig = px.line(final, x="Year", y=["Male", "Female"])
+    fig.update_layout(autosize=False, width=1000, height=600)
+    st.plotly_chart(fig)
